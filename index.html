@@ -71,7 +71,7 @@
         function startNewGame() {
             currentGame.timestamp = new Date().toISOString();
             currentGame.players = players.filter(name => document.getElementById(`check-${name}`).checked)
-                .map(name => ({ name, bets: [{ amount: 50, timestamp: new Date().toISOString() }], earnings: 0 }));
+                .map(name => ({ name, bets: [{ amount: 50, timestamp: new Date().toISOString() }], earnings: 0, finalChips: 0 }));
             updateGameView();
         }
 
@@ -85,14 +85,22 @@
 
         function endGame() {
             currentGame.players.forEach(player => {
-                let earnings = prompt(`הכנס את הסכום שהרוויח/הפסיד ${player.name}:`, "0");
-                player.earnings = parseFloat(earnings) || 0;
+                let finalChips = prompt(`הכנס את הסכום שהרוויח/הפסיד ${player.name}:`, "0");
+                player.finalChips = parseFloat(finalChips) || 0;
             });
             updateGameView();
         }
 
         function calculateRankings() {
-            currentGame.players.sort((a, b) => (b.earnings - b.bets.reduce((sum, b) => sum + b.amount, 0)) - (a.earnings - a.bets.reduce((sum, b) => sum + b.amount, 0)));
+            currentGame.players.forEach(player => {
+                let totalBet = player.bets.reduce((sum, b) => sum + b.amount, 0);
+                let winLoss = player.finalChips - totalBet; // Calculate win/loss as final chips - total bet
+                player.winLoss = winLoss;
+            });
+
+            // Sort players based on winLoss in descending order
+            currentGame.players.sort((a, b) => b.winLoss - a.winLoss);
+
             updateGameView();
         }
 
@@ -107,13 +115,21 @@
         function updateGameView() {
             let totalGameBet = 0;
             let tableHTML = `<table>
-                <tr><th>שם שחקן</th><th>סכומים</th><th>סה\"כ הימורים</th><th>רווח/הפסד</th><th>דירוג</th></tr>`;
+                <tr><th>שם שחקן</th><th>סכומים</th><th>סה\"כ הימורים</th><th>שווי סופי</th><th>רווח/הפסד</th><th>דירוג</th></tr>`;
             
             currentGame.players.forEach((p, index) => {
-                let total = p.bets.reduce((sum, b) => sum + b.amount, 0);
-                totalGameBet += total;
-                let betsHtml = p.bets.map(b => `$${b.amount}`).join(" | ");
-                let rank = index < 3 ? ["🥇", "🥈", "🥉"][index] : index + 1;
+                let totalBet = p.bets.reduce((sum, b) => sum + b.amount, 0); // Total bet amount
+                totalGameBet += totalBet;
+
+                // Change this line to correctly display negative bets
+                let betsHtml = p.bets.map(b => `${b.amount < 0 ? '' : '-'}${Math.abs(b.amount)}`).join(" | ");
+
+                // Calculate the win/loss (final chips - total bet)
+                let winLoss = p.finalChips - totalBet;  // Corrected win/loss calculation
+
+                p.winLoss = winLoss; // Store win/loss for the player
+
+                let rank = index + 1;  // Adjust rank to show in order based on the sorted array
                 tableHTML += `<tr>
                     <td>${p.name}<br>
                         <button onclick="rebuy('${p.name}', 50)">$50</button>
@@ -121,15 +137,27 @@
                         <button onclick="rebuy('${p.name}', 150)">$150</button>
                     </td>
                     <td>${betsHtml}</td>
-                    <td>$${total}</td>
-                    <td>$${p.earnings - total}</td>
+                    <td>$${totalBet}</td>
+                    <td id="earnings-${p.name}">
+                        <input type="number" id="input-${p.name}" value="${p.finalChips}" onchange="updateEarnings('${p.name}')">
+                    </td>
+                    <td>$${winLoss < 0 ? '-' : ''}${Math.abs(winLoss)}</td> <!-- Correct win/loss display with minus if negative -->
                     <td>${rank}</td>
                 </tr>`;
             });
             
-            tableHTML += `<tr><td colspan="5"><b>סה\"כ הימורים במשחק:</b> $${totalGameBet}</td></tr>`;
+            tableHTML += `<tr><td colspan="6"><b>סה\"כ הימורים במשחק:</b> $${totalGameBet}</td></tr>`;
             tableHTML += `</table>`;
             document.getElementById("game").innerHTML = tableHTML;
+        }
+
+        function updateEarnings(playerName) {
+            const input = document.getElementById(`input-${playerName}`);
+            const player = currentGame.players.find(p => p.name === playerName);
+            if (player) {
+                player.finalChips = parseFloat(input.value) || 0; // Update final chips based on user input
+                updateGameView(); // Re-render the game view
+            }
         }
     </script>
 </head>
@@ -138,7 +166,7 @@
     <button onclick="addPlayer()">הוסף שחקן</button>
     <button onclick="startNewGame()">התחל משחק חדש</button>
     <button onclick="endGame()">סיים משחק</button>
-    <button onclick="calculateRankings()">חשב דירוג</button>
+    <button onclick="calculateRankings()">חשב</button>
     <h2>שחקנים</h2>
     <div id="players" class="player-list"></div>
     <h2>משחק נוכחי</h2>
