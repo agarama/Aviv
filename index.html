@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול טקסס הולדם</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #116611;
+            color: white;
+            text-align: center;
+        }
+        button {
+            background-color: #ffcc00;
+            border: none;
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #222;
+        }
+        th, td {
+            border: 1px solid white;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #333;
+        }
+        .player-list {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .player-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 200px;
+        }
+    </style>
+    <script>
+        let players = JSON.parse(localStorage.getItem("players")) || [];
+        let currentGame = { timestamp: null, players: [] };
+
+        function savePlayers() {
+            localStorage.setItem("players", JSON.stringify(players));
+        }
+
+        function addPlayer() {
+            const playerName = prompt("הכנס שם שחקן:");
+            if (playerName && !players.includes(playerName)) {
+                players.push(playerName);
+                savePlayers();
+                updatePlayerList();
+            }
+        }
+
+        function deletePlayer(playerName) {
+            players = players.filter(p => p !== playerName);
+            savePlayers();
+            updatePlayerList();
+        }
+
+        function startNewGame() {
+            currentGame.timestamp = new Date().toISOString();
+            currentGame.players = players.filter(name => document.getElementById(`check-${name}`).checked)
+                .map(name => ({ name, bets: [{ amount: 50, timestamp: new Date().toISOString() }], earnings: 0 }));
+            updateGameView();
+        }
+
+        function rebuy(playerName, amount) {
+            const player = currentGame.players.find(p => p.name === playerName);
+            if (player) {
+                player.bets.push({ amount, timestamp: new Date().toISOString() });
+                updateGameView();
+            }
+        }
+
+        function endGame() {
+            currentGame.players.forEach(player => {
+                let earnings = prompt(`הכנס את הסכום שהרוויח/הפסיד ${player.name}:`, "0");
+                player.earnings = parseFloat(earnings) || 0;
+            });
+            updateGameView();
+        }
+
+        function calculateRankings() {
+            currentGame.players.sort((a, b) => (b.earnings - b.bets.reduce((sum, b) => sum + b.amount, 0)) - (a.earnings - a.bets.reduce((sum, b) => sum + b.amount, 0)));
+            updateGameView();
+        }
+
+        function updatePlayerList() {
+            document.getElementById("players").innerHTML = players.map(p => 
+                `<div class='player-item'>
+                    <input type='checkbox' id='check-${p}' checked> ${p}
+                    <button onclick="deletePlayer('${p}')">❌</button>
+                </div>`).join("");
+        }
+
+        function updateGameView() {
+            let totalGameBet = 0;
+            let tableHTML = `<table>
+                <tr><th>שם שחקן</th><th>סכומים</th><th>סה\"כ הימורים</th><th>רווח/הפסד</th><th>דירוג</th></tr>`;
+            
+            currentGame.players.forEach((p, index) => {
+                let total = p.bets.reduce((sum, b) => sum + b.amount, 0);
+                totalGameBet += total;
+                let betsHtml = p.bets.map(b => `$${b.amount}`).join(" | ");
+                let rank = index < 3 ? ["🥇", "🥈", "🥉"][index] : index + 1;
+                tableHTML += `<tr>
+                    <td>${p.name}<br>
+                        <button onclick="rebuy('${p.name}', 50)">$50</button>
+                        <button onclick="rebuy('${p.name}', 100)">$100</button>
+                        <button onclick="rebuy('${p.name}', 150)">$150</button>
+                    </td>
+                    <td>${betsHtml}</td>
+                    <td>$${total}</td>
+                    <td>$${p.earnings - total}</td>
+                    <td>${rank}</td>
+                </tr>`;
+            });
+            
+            tableHTML += `<tr><td colspan="5"><b>סה\"כ הימורים במשחק:</b> $${totalGameBet}</td></tr>`;
+            tableHTML += `</table>`;
+            document.getElementById("game").innerHTML = tableHTML;
+        }
+    </script>
+</head>
+<body>
+    <h1>ניהול טקסס הולדם</h1>
+    <button onclick="addPlayer()">הוסף שחקן</button>
+    <button onclick="startNewGame()">התחל משחק חדש</button>
+    <button onclick="endGame()">סיים משחק</button>
+    <button onclick="calculateRankings()">חשב דירוג</button>
+    <h2>שחקנים</h2>
+    <div id="players" class="player-list"></div>
+    <h2>משחק נוכחי</h2>
+    <div id="game"></div>
+    <script>updatePlayerList();</script>
+</body>
+</html>
