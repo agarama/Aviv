@@ -8,7 +8,41 @@ on:
   repository_dispatch:
     types: [update-players] # מפעיל את ה-Action כשיש קריאה מ-JavaScript
 
+jobs:name: Update Players
+
+on:
+  repository_dispatch:
+    types: [update-players]
+
 jobs:
+  update-players:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Save players to file
+        run: |
+          echo "${{ github.event.client_payload.playersJson }}" > players.json
+
+      - name: Commit and push the updated player list
+        run: |
+          git config --global user.email "youremail@example.com"
+          git config --global user.name "yourusername"
+          git add players.json
+          git commit -m "Update player list"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.AVIV_TOKEN }}  # Using the GitHub token for authentication
+
   save-players:
     runs-on: ubuntu-latest
 
