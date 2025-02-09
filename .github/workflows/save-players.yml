@@ -1,0 +1,32 @@
+name: Save Players List
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # מאפשר להפעיל את זה ידנית אם צריך
+  repository_dispatch:
+    types: [update-players] # מפעיל את ה-Action כשיש קריאה מ-JavaScript
+
+jobs:
+  save-players:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Decode Players Data
+        run: echo "$PLAYERS_JSON" | base64 --decode > players.json
+        env:
+          PLAYERS_JSON: ${{ secrets.PLAYERS_JSON }}
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add players.json
+          git commit -m "Update players list" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
