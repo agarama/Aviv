@@ -25,7 +25,7 @@ jobs:
           python-version: "3.x"
 
       - name: 🚀 Run Python script
-        run: python save_players.py '${{ toJSON(github.event.client_payload.playersJson) }}'
+        run: python save_players.py '${{ github.event.client_payload.playersJson }}'
 
       - name: 🔐 Authenticate with GitHub Token
         run: echo "GH_TOKEN=${{ secrets.AVIV_TOKEN }}" >> $GITHUB_ENV
