@@ -27,7 +27,7 @@ jobs:
 
       - name: 🚀 Run Python script
         run: |
-          # Ensure proper formatting and write the players JSON content into players.json
+          # Write the players JSON content directly into players.json
           echo "${{ github.event.client_payload.playersJson }}" > players.json
 
           # Pass the content of players.json as an argument to the Python script
