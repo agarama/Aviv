@@ -1,36 +1,34 @@
 name: Update Players
-
 on:
   repository_dispatch:
     types: [update-players]
 
 jobs:
-  update-players:
+  update-file:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: 📥 Clone repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: 📝 Print received payload
+        run: echo "📢 Payload: ${{ toJSON(github.event.client_payload) }}"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests
+      - name: 🔧 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
 
-    - name: Run Python script to save players
-      run: python save_players.py "${{ github.event.client_payload.playersJson }}"
+      - name: 🚀 Run Python script
+        run: python save_players.py '${{ toJSON(github.event.client_payload.playersJson) }}'
 
-    - name: Commit and push changes
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git add .
-        git commit -m "Update player list"
-        git push
-      env:
-        GITHUB_TOKEN: ${{ secrets.AVIV_TOKEN }}
+      - name: 🔐 Authenticate with GitHub Token
+        run: echo "GH_TOKEN=${{ secrets.AVIV_TOKEN }}" >> $GITHUB_ENV
+
+      - name: 📤 Commit and Push changes
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "actions@github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.AVIV_TOKEN }}@github.com/agarama/Aviv.git
+          git add players.json
+          git commit -m "Update players list" || echo "No changes to commit"
+          git push
