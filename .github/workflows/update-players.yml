@@ -29,3 +29,5 @@ jobs:
           git add players.json
           git commit -m "🔄 עדכון רשימת שחקנים"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.AVIV_SECRET }}
