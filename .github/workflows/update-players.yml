@@ -19,6 +19,7 @@ jobs:
       - name: 📝 Print received payload
         run: |
           echo "📢 Payload: ${{ toJSON(github.event.client_payload) }}"
+          echo "Players JSON: ${{ github.event.client_payload.playersJson }}"
 
       - name: 🔧 Setup Python
         uses: actions/setup-python@v4
@@ -27,9 +28,9 @@ jobs:
 
       - name: 🚀 Run Python script
         run: |
-          # Write the players JSON content directly into players.json
-          echo "${{ github.event.client_payload.playersJson }}" > players.json
-
+          # Debugging: Ensure the content being echoed is correct
+          echo "Testing JSON output: ${{ github.event.client_payload.playersJson }}" > players.json
+          cat players.json # Check the output in the log
           # Pass the content of players.json as an argument to the Python script
           python save_players.py "$(cat players.json)"
 
