@@ -1,50 +1,31 @@
-name: Update Players
+name: Update Players List
 
 on:
   repository_dispatch:
-    types:
-      - update-players
-
-permissions:
-  contents: write
-  actions: write
+    types: [update-players]
 
 jobs:
-  update-file:
+  update_players:
     runs-on: ubuntu-latest
+
     steps:
-      - name: 📥 Clone repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 📝 Print received payload
-        run: |
-          echo "📢 Payload: ${{ toJSON(github.event.client_payload) }}"
-          echo "Players JSON: ${{ github.event.client_payload.playersJson }}"
-
-      - name: 🔧 Setup Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          python-version: '3.10'
 
-      - name: 🚀 Run Python script
+      - name: Run Python script
         run: |
-          # Debugging: Ensure the content being echoed is correct
-          echo "Testing JSON output: ${{ github.event.client_payload.playersJson }}" > players.json
-          cat players.json # Check the output in the log
-          # Pass the content of players.json as an argument to the Python script
-          python save_players.py "$(cat players.json)"
+          echo "📢 JSON שנתקבל: '${{ github.event.client_payload.playersJson }}'"
+          python save_players.py '${{ github.event.client_payload.playersJson }}'
 
-      - name: 🔐 Authenticate with GitHub Token
-        env:
-          GH_TOKEN: ${{ secrets.AVIV_TOKEN }}
+      - name: Commit and Push Changes
         run: |
-          echo "GH_TOKEN=${GH_TOKEN}" >> $GITHUB_ENV
-
-      - name: 📤 Commit and Push changes
-        run: |
-          git config --global user.name "GitHub Action"
+          git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.AVIV_TOKEN }}@github.com/agarama/Aviv.git
           git add players.json
-          git commit -m "Update players list" || echo "No changes to commit"
+          git commit -m "🔄 עדכון רשימת שחקנים"
           git push
