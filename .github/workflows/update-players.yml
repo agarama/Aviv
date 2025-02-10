@@ -1,3 +1,7 @@
+permissions:
+  contents: write
+  actions: write
+  repository_dispatch: write
 name: Update Players
 on:
   repository_dispatch:
