@@ -5,8 +5,17 @@ import os
 # Load player data from the arguments
 players_json = sys.argv[1]  # This will get the playersJson passed from GitHub Actions
 
+# Check if players_json is not empty
+if not players_json:
+    print("❌ Error: players_json is empty or not passed correctly.")
+    sys.exit(1)
+
 # Convert the JSON string to a Python object
-players_data = json.loads(players_json)
+try:
+    players_data = json.loads(players_json)
+except json.JSONDecodeError as e:
+    print(f"❌ Error decoding JSON: {e}")
+    sys.exit(1)
 
 # Define the path where you want to store the player data
 file_path = 'players.json'  # You can change this to any file in your repo
@@ -25,3 +34,5 @@ existing_data['players'] = players_data
 # Save the updated data back to the file
 with open(file_path, 'w') as file:
     json.dump(existing_data, file, indent=4)
+
+print("✅ Player data successfully updated.")
