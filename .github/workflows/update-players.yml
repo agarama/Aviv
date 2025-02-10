@@ -7,6 +7,7 @@ on:
 permissions:
   contents: write
   actions: write
+  repository_dispatch: write
 
 jobs:
   update-file:
@@ -16,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📝 Print received payload
-        run: echo "📢 Payload: ${{ github.event.client_payload }}"
+        run: echo "📢 Payload: ${{ toJSON(github.event.client_payload) }}"
 
       - name: 🔧 Setup Python
         uses: actions/setup-python@v4
