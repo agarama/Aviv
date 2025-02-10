@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📝 Print received payload
-        run: echo "📢 Payload: ${{ toJson(github.event.client_payload) }}"
+        run: echo "📢 Payload: ${{ github.event.client_payload }}"
 
       - name: 🔧 Setup Python
         uses: actions/setup-python@v4
@@ -25,7 +25,7 @@ jobs:
 
       - name: 🚀 Run Python script
         run: |
-          echo '${{ github.event.client_payload.playersJson }}' > players.json
+          echo "${{ github.event.client_payload.playersJson }}" > players.json
           python save_players.py players.json
 
       - name: 🔐 Authenticate with GitHub Token
