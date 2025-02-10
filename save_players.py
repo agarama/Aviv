@@ -2,37 +2,42 @@ import sys
 import json
 import os
 
-# Load player data from the arguments
-players_json = sys.argv[1]  # This will get the playersJson passed from GitHub Actions
-
-# Check if players_json is not empty
-if not players_json:
-    print("❌ Error: players_json is empty or not passed correctly.")
+# Ensure a file path argument is provided
+if len(sys.argv) < 2:
+    print("Usage: python save_players.py <file_path>")
     sys.exit(1)
 
-# Convert the JSON string to a Python object
+file_path = sys.argv[1]  # Get the file path from arguments
+
+# Read JSON data from the file
 try:
-    players_data = json.loads(players_json)
+    with open(file_path, 'r', encoding='utf-8') as file:
+        players_data = json.load(file)  # Parse JSON
 except json.JSONDecodeError as e:
     print(f"❌ Error decoding JSON: {e}")
     sys.exit(1)
+except FileNotFoundError:
+    print(f"❌ Error: File '{file_path}' not found.")
+    sys.exit(1)
 
-# Define the path where you want to store the player data
-file_path = 'players.json'  # You can change this to any file in your repo
+# Define the path where the updated player data will be stored
+output_file = 'players.json'
 
-# Check if the file exists
-if os.path.exists(file_path):
-    # If it exists, read its contents first (optional, for additional processing)
-    with open(file_path, 'r') as file:
-        existing_data = json.load(file)
+# Check if the output file exists and read existing data
+if os.path.exists(output_file):
+    try:
+        with open(output_file, 'r', encoding='utf-8') as file:
+            existing_data = json.load(file)
+    except json.JSONDecodeError:
+        existing_data = {}  # If file is corrupted, start fresh
 else:
     existing_data = {}
 
-# Update the file with the new player list
+# Update the players list
 existing_data['players'] = players_data
 
 # Save the updated data back to the file
-with open(file_path, 'w') as file:
-    json.dump(existing_data, file, indent=4)
+with open(output_file, 'w', encoding='utf-8') as file:
+    json.dump(existing_data, file, indent=4, ensure_ascii=False)
 
-print("✅ Player data successfully updated.")
+print("✅ Players list updated successfully!")
