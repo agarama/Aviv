@@ -1,11 +1,13 @@
+name: Update Players
+
+on:
+  repository_dispatch:
+    types: [update-players]
+
 permissions:
   contents: write
   actions: write
   repository_dispatch: write
-name: Update Players
-on:
-  repository_dispatch:
-    types: [update-players]
 
 jobs:
   update-file:
