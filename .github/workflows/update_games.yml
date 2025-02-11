@@ -1,0 +1,33 @@
+name: Update Games List
+
+on:
+  repository_dispatch:
+    types: [update-game]
+
+jobs:
+  update_game:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Run Python script
+        run: |
+          echo "📢 JSON שנתקבל: '${{ github.event.client_payload.gameJson }}'"
+          python save_game.py '${{ github.event.client_payload.gameJson }}'
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add games.json
+          git commit -m "🔄 עדכון רשימת משחקים"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.AVIV_SECRET }}
